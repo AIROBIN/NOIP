@@ -1,0 +1,801 @@
+最小生成树
+
+
+#include<bits/stdc++.h>
+using namespace std;
+
+const int MAX_M    = 200010;
+const int MAX_NODE =  5010;
+
+struct s{
+int a;
+int b;
+int z;
+} con[MAX_M];
+
+int father[MAX_NODE]; 
+bool vis[MAX_NODE];
+
+
+bool cmp(s a, s b){
+return a.z<b.z;
+}
+
+int find_root(int x) {
+if(father[x]!=-1) {
+return father[x] = find_root(father[x]);
+}
+return x;
+}
+
+/*
+*1: success 
+*0: fail
+*/
+int union_(int x, int y) {
+int x_root = find_root(x);
+int y_root = find_root(y);
+if(x_root!=y_root) {
+father[y_root] = x_root;
+return 1;
+}
+return 0;
+} 
+
+int main() {
+memset(father, -1, sizeof(father));
+int m, n, x, y, z, ans = 0;
+cin>>n>>m;
+for(int i=0; i<m; i++) {
+cin>>x>>y>>z;
+con[i].a = x;
+con[i].b = y;
+con[i].z = z;
+}
+sort(con, con+m, cmp);
+for(int i=0; i<m; i++) {
+if(union_(con[i].a, con[i].b)) {
+vis[con[i].a] = true;
+vis[con[i].b] = true;
+ans += con[i].z;
+}
+}
+for(int i=1; i<=n; i++) {
+if(!vis[i]) {
+cout<<"orz"<<endl;
+return 0;
+}
+}
+cout<<ans<<endl;
+return 0;
+}
+单源最短路径
+
+链式前向星
+#include<bits/stdc++.h>
+using namespace std;
+
+const int MAXN = 10001;
+const int MAXM = 500001;
+const int INF  = 2147483647;
+
+struct edge{
+int from;
+int to;
+int w;
+int next;
+};
+edge e[MAXM];
+
+struct node{
+int w;
+int id;
+friend bool operator <(const node& a, const node& b) {
+return a.w>b.w;
+}
+};
+
+int cnt = 0;
+
+int head[MAXN], vis[MAXN], m, n, s;
+
+long long dis[MAXN];
+
+void add(int from, int to, int w) {
+e[++cnt].from = from;
+e[cnt].to = to;
+e[cnt].w = w;
+e[cnt].next = head[from];
+head[from] = cnt;//head指from点的所有边 
+}
+
+priority_queue<node> q;
+void dijkstra(int s) {
+    for(int i=1;i<=n;i++) {
+        dis[i]=INF;
+    }
+    dis[s]=0;//赋初值
+    q.push((node){0,s});
+    while(!q.empty()) {
+        node x=q.top();
+        q.pop();
+        int u=x.id;
+        if(vis[u])
+continue; 
+        vis[u]=1;
+        for(int i=head[u];i;i=e[i].next) {
+            int v=e[i].to;
+            if(dis[v]>dis[u]+e[i].w) {
+                dis[v]=dis[u]+e[i].w;
+                q.push((node){dis[v],v});
+            }
+        }
+    }
+}
+void printAns() {
+for(int i=1; i<=n; i++) {//从1开始 
+cout<<dis[i]<<" ";
+}
+cout<<endl;
+}
+int main() {
+cin>>n>>m>>s;
+int x, y, z;
+for(int i=0; i<m; i++) {
+cin>>x>>y>>z;
+add(x, y, z);
+}
+dijkstra(s);
+printAns();
+return 0;
+}
+
+
+堆优化
+#include<bits/stdc++.h>
+using namespace std;
+/*我也不知道为什么用英文注释*/
+const int maxn = 100010;//arr size too small will cause RE(seg fault)
+
+typedef unsigned long long ull;
+
+struct Edge{
+    int from;
+    int to;
+    ull w;
+};
+
+struct Node{
+    int n;
+    ull w;
+    friend bool operator < (const Node& a, const Node& b) {
+        return a.w>b.w;
+    }
+};
+
+int n, m, s = 1;
+
+ull dis[maxn+1];
+
+vector<Edge> edges;
+vector<int > head[maxn];
+
+void addEdge(int from, int to, ull w) {
+    edges.push_back((Edge){from, to, w});
+    head[from].push_back(edges.size()-1);
+}
+
+priority_queue<Node> pq;
+void dijsktra(int start) {
+    for(int i=1; i<=n; i++) {
+        dis[i] = 1e10;
+    }
+    dis[start] = 0;
+    pq.push((Node){start, 0});
+    while(!pq.empty()) {
+        Node temp = pq.top();pq.pop();
+        int n = temp.n;
+        ull w = temp.w;
+        if(w!=dis[n]) {
+            continue;
+        }
+        for(int i=0; i<head[n].size(); i++) {
+            Edge& now = edges[head[n][i]];
+            if(dis[now.to]>dis[now.from]+now.w) {
+                dis[now.to] = dis[now.from] + now.w;
+                pq.push((Node){now.to, dis[now.to]});//it should update only at the time it needed
+            }
+        }
+    }
+}
+
+void print_ans() {
+   for(int i=1; i<=n; i++)  {
+       cout<<dis[i]<<" ";
+    }
+   cout<<endl;
+}
+
+int main() {
+    cin>>n>>m>>s;
+    int from_, to_;
+    ull w;
+    for(int i=0; i<m; i++) {
+        cin>>from_>>to_>>w;
+        addEdge(from_, to_, w);
+        //addEdge(to_, from_, w);
+    }
+    dijsktra(s);
+    print_ans();
+    return 0;
+}
+其他：
+
+并查集
+#include<iostream>
+#include<cstring>
+using namespace std;
+const int maxn = 10010;
+
+int father[maxn] ;
+
+void init() {
+memset(father, -1, sizeof(father));
+}
+
+int find_father(int x) {
+if(father[x]==-1) {
+return x;
+}
+return father[x] = find_father(father[x]);
+}
+
+void union_(int x, int y) {
+int x_root = find_father(x);
+int y_root = find_father(y);
+if(x_root!=y_root)
+father[x_root] = y_root;
+}
+int main() {
+init();
+int m, n, x, y, z;
+int x_r=0, y_r=0;
+cin>>n>>m;
+for(int i=0; i<m; i++) {
+cin>>z>>x>>y;
+if(z==1)
+union_(x, y);
+else {
+x_r = find_father(x);
+y_r = find_father(y);
+if(x_r==y_r)
+cout<<"Y"<<endl;
+else
+cout<<"N"<<endl;
+}
+}
+return 0;
+}
+
+树状数组-点修改
+#include<iostream>
+using namespace std;
+const int maxn = 5000000;
+int d[maxn] , n;
+
+int lowbit(int x) {
+    return x&(-x);
+}
+
+int query(int x) {/*Query from a[x] + ... + a[y]*/
+    register int sum = 0;
+    while(x) {
+        sum += d[x];
+        x -= lowbit(x);
+    }
+    return sum;
+}
+
+void modify(int x, int v) {/*Add v y a[x]*/
+    while(x<=n) {
+        d[x] += v;
+        x += lowbit(x);
+    }
+}
+
+int main(int argc, char const *argv[])
+{
+    #ifdef ONLINE_JUDGE
+    //freopen("test.in", "r", stdin);
+    #endif
+    ios::sync_with_stdio(0);
+    cin.tie(0), cout.tie(0);
+    //debug stuff
+    int m, temp;
+    cin>>n>>m;
+    for(int i=1; i<=n; i++) {
+        cin>>temp;
+        modify(i, temp);//cout<<temp<<endl;
+    }
+    int option, x, y;
+    for(int i=0; i<m; i++) {
+        cin>>option>>x>>y;
+        if(option==1)
+            modify(x, y);
+        else if(option==2) 
+            cout<<query(y) - query(x-1)<<endl;
+    }
+    return 0;
+}
+
+树状数组-区间修改
+#include<iostream>
+using namespace std;
+/*这是模板， 于ubuntu bash生成*/
+
+const int maxn = 500000 + 10000;
+
+int d[maxn], n, m;
+
+int lowbit(int x) {
+    return x&(-x);
+}
+
+int query(int x) {/*Query from a[x] + ... + a[y]*/
+    register int sum = 0;
+    while(x) {
+        sum += d[x];
+        x -= lowbit(x);
+    }
+    return sum;
+}
+
+void modify(int x, int v) {/*Add v y a[x]*/
+    while(x<=n) {
+        d[x] += v;
+        x += lowbit(x);
+    }
+}
+
+int main(int argc, char const *argv[])
+{
+    #ifndef ONLINE_JUDGE
+    //freopen("test.in", "r", stdin);
+    #endif
+    ios::sync_with_stdio(0);
+    cin.tie(0), cout.tie(0);
+    cin>>n>>m;
+    int temp, temp2 = 0, option, l, r, x;
+    for(int i=1; i<=n; i++)
+        cin>>temp, modify(i, temp - temp2), temp2 = temp;
+    for(int i=1; i<=m; i++) {
+        cin>>option;
+        if(option==1) {
+            cin>>l>>r>>x;
+            modify(l, x);
+            modify(r+1, -x);
+        }
+        else {
+            cin>>x;
+            cout<<query(x)<<endl;
+        }
+    }
+    return 0;
+}
+
+线性筛
+#include<iostream>
+
+//const int maxn = 100000005;//垃圾数组，耗我青春
+
+using namespace std;
+
+int n,  m;
+int prime[1000000];//这里不用开大
+bool noprime[100000005];//省空间
+int main() {
+    cin>>n>>m;
+    //cout<<m;
+    noprime[0] = noprime[1] = true;
+    for(int i=2; i<=n; i++)
+     {
+        if(!noprime[i]) {
+            prime[++prime[0]] = i;
+        }
+        for(int j=1; j<=prime[0] && prime[j]*i<=n; j++) {//prime[j]*i防越界
+            noprime[i*prime[j]] = true;
+            if(i%prime[j]==0)   break;
+        }
+    }
+
+    int temp;
+    for(int i=0; i<m; i++) {
+        cin>>temp;
+        if(noprime[temp] )  cout<<"No"<<endl;
+        else    cout<<"Yes"<<endl;
+    }
+    return 0;
+}
+
+简单DP
+#include<iostream> 
+using namespace std;
+
+const int maxm = 210;
+const int maxn = 210;
+
+int m, n, f[maxm][maxn];
+
+int max3(int a, int b, int c) {
+return max(max(a, b), c);
+}
+
+int main() {
+cin>>m>>n;
+int tmp;
+for(int i=1; i<=m; i++) {
+for(int j=1; j<=n; j++) {
+cin>>tmp;
+f[i][j] = max3(f[i-1][j-1], f[i-1][j], f[i-1][j+1]) + tmp;
+/*他吃东西有一个习惯——只吃自己前方或左前方或右前方的盘中的食物*/
+}
+}
+cout<<max3(f[m][n/2], f[m][n/2+1], f[m][n/2+2])<<endl;/*瞎*/
+return 0;
+}
+
+01背包
+#include<iostream>
+using namespace std;
+const int MAXM = 105;
+const int MAXT = 1005;
+int v[MAXM], w[MAXM],
+    f[MAXM][MAXT];
+
+int main(){
+int t, m;
+/*Input*/
+cin>>t>>m;
+for(int i=1; i<=m; i++) {
+cin>>w[i]>>v[i];
+}
+/*Find Answer*/
+for(int i=1; i<=m; i++) {/*第i种草药*/
+for(int j=t; j>0; j--) {/*背包容量j*/ 
+if(w[i]<=j) {/*能装下*/
+f[i][j] = max(f[i-1][j], f[i-1][j-w[i]]+v[i]);
+}
+else {/*装不下*/
+f[i][j] = f[i-1][j];
+}
+} 
+}
+cout<<f[m][t]<<endl;
+return 0;
+}
+
+完全背包
+#include<iostream> 
+using namespace std;
+/*完全背包*/
+const int maxm = 233333;//数组开小了怎么行
+
+int t, m, f[maxm];
+
+int main() {
+cin>>t>>m;
+int w, v;
+for(int i=1; i<=m; i++){
+cin>>w>>v;
+for(int j=w; j<=t; j++){
+f[j] = max(f[j], f[j-w]+v);
+}
+}
+cout<<f[t]<<endl;
+return 0; 
+}
+
+高精度加
+#include<iostream>
+#include<cstring>
+using namespace std;
+const int maxn = 510;
+char a[maxn], b[maxn];
+int a2[maxn], b2[maxn], c2[maxn];
+int main() {
+cin>>a;
+cin>>b;
+int strlena = strlen(a);
+int strlenb = strlen(b);
+int i;
+for(i=0; i<strlena; i++) {
+a2[i] = a[strlena - i - 1]-'0';
+}
+for(i=0; i<strlenb; i++) {
+b2[i] = b[strlenb - i - 1]-'0';
+}
+//for(i=0; i<strlena; i++)
+/*
+for(i=0; i<strlena; i++) {
+cout<<a2[i];
+}cout<<endl;
+for(i=0; i<strlenb; i++) {
+cout<<b2[i];
+}cout<<endl;*/
+int tot = max(strlena, strlenb);
+int y = 0;
+for(i=0; i<tot; i++) {
+c2[i] = a2[i] + b2[i] + y;
+y = c2[i] / 10;
+c2[i] %= 10;
+}
+if(y!=0)
+cout<<y;
+for(i=tot-1; i>=0; i--) {
+cout<<c2[i];
+}cout<<endl;
+return 0;
+}
+
+高精度减
+#include<iostream>
+#include<cstring>
+using namespace std;
+const int maxn = 10100;
+char a[maxn], b[maxn];
+int a2[maxn], b2[maxn], c2[maxn];
+int cmp() {
+    int i;
+    if(strlen(a)>strlen(b)) {
+        return 2;
+    }
+    else if(strlen(b)>strlen(a)) {
+        return 1;
+    }
+    else {
+        for(i=0; i<strlen(a); i++) {
+            if(a[i]-'0'<b[i]-'0') {
+                return 1;
+            }
+            if(a[i]-'0'>b[i]-'0') {
+                return 2;
+            }
+        }
+        return 0;
+    }
+    return 0;
+}
+void swapab() {
+    int i;
+    for(i=0; i<strlen(a); i++) {
+        c2[i] = a2[i];
+    }
+    memset(a2, 0, sizeof a2);
+    for(i=0; i<strlen(b); i++) {
+        a2[i] = b2[i];
+    }
+    memset(b2, 0, sizeof b2);
+    for(i=0; i<strlen(a); i++) {
+        b2[i] = c2[i];
+    }
+    memset(c2, 0, sizeof c2);
+}
+int main() {
+    cin>>a;
+    cin>>b;
+    int strlena = strlen(a);
+    int strlenb = strlen(b);
+    int i;
+    for(i=0; i<strlena; i++) {
+        a2[i] = a[strlena - i - 1] - '0';
+    }
+    for(i=0; i<strlenb; i++) {
+        b2[i] = b[strlenb - i - 1] - '0';
+    }
+    bool isFushu = false;
+    switch(cmp()) {
+        case 1:
+            isFushu = true;
+            swapab();
+            swap(strlena, strlenb);
+            break;
+        case 0:
+            cout<<0<<endl;
+            return 0;
+        case 2:
+            isFushu = false;
+            break;
+    }
+    if(isFushu)
+        cout<<'-';
+    /*
+    for(i=0; i<strlena; i++) {
+        cout<<a2[i];
+    }cout<<endl;
+    for(i=0; i<strlenb; i++) {
+        cout<<b2[i];
+    }cout<<endl;
+    */
+    int tot = max(strlena, strlenb);
+    int jiewei = 0;
+    for(i=0; i<tot; i++) {
+        c2[i] = a2[i] - b2[i] - jiewei;
+        //cout<<"c2["<<i<<"] is "<<c2[i]<<endl;
+        if(c2[i]<0) {
+            jiewei = 1;
+            c2[i] = 10 + c2[i];
+        //    cout<<"And now it's "<<c2[i]<<endl;
+        }
+        else {
+            jiewei = 0;
+        }
+    }
+    bool notOK = true;
+    for(i=tot-1; i>=0; i--) {
+        if(notOK) {
+            if(c2[i]!=0) {
+                notOK = false;
+            }
+            else continue;
+        }
+        cout<<c2[i];
+    }
+    cout<<endl;
+    return 0;
+}
+
+二叉建树
+#include<iostream>
+#include<cmath>
+#include<cstdio>
+using namespace std;
+
+const char NULL_SUB = '*';
+
+const int maxn = 2049;//数组开大
+
+char tree[maxn];
+
+int string_[maxn], n;
+
+void build_tree(int root, int from, int to) {
+    //cout<<"building "<<root<<"  from "<<from<<" to "<<to<<endl;
+    int left_subtree    = 2 * root;
+    int right_subtree = 2 * root + 1;
+    int mid = (from + to) / 2;
+    if(from==to) {
+        switch(string_[from]) {
+            case 0:
+                tree[root] = 'B';
+                break;
+            case 1:
+                tree[root] = 'I';
+                break;
+        }
+        tree[left_subtree] = NULL_SUB;
+        tree[right_subtree] = NULL_SUB;
+        return;
+    }
+    else{
+        build_tree(left_subtree, from, mid);
+        build_tree(right_subtree, mid + 1, to);
+        if(tree[left_subtree]==tree[right_subtree]) {
+            if(tree[left_subtree]=='B') {
+                tree[root] = 'B';
+            }
+            else if(tree[left_subtree]=='I'){
+                tree[root] = 'I';
+            }
+            else {
+                tree[root] = 'F';
+            }
+        }
+        else {
+            tree[root] = 'F';
+        }
+    }
+}
+
+void print_ans(int root) {
+    if(tree[root]!=NULL_SUB) {
+        //cout<<"printing "<<root<<endl;
+        int left_subtree = root * 2;
+        int right_subtree = root * 2 + 1;
+        print_ans(left_subtree);
+        print_ans(right_subtree);
+        putchar(tree[root]);
+    }
+}
+
+int main() {
+    cin>>n;
+    n = pow(2, n);
+    char temp;
+    for(int i=0; i<n; i++) {
+        //cin>>string_[i];
+        cin>>temp;
+        string_[i] = temp - '0';
+    }
+    build_tree(1, 0, n-1);
+    print_ans(1);
+    putchar('\n');
+    return 0;
+}
+
+求二叉树先序
+#include<iostream>
+#include<cstring>
+using namespace std;
+string zx, hx;//中序便利，后序便利
+int tree[1000];
+
+void build(int root, int rootnum, int from, int to);//建树 中序便利（from， to）， 根为 rootnum    存储在root
+int findRoot(int l, int r);//在 后序便利 中 寻找 中序便利 (l, r)子树中的根
+void xxbl(int root);//输出先序便利
+
+int main() {
+    memset(tree, -1, sizeof(tree));
+    cin>>zx>>hx;
+    build(1, findRoot(0, zx.length()-1), 0, zx.length()-1);
+    //for(int i=0; i<100; i++) {
+    //    cout<<tree[i]<<" ";
+    //}
+    xxbl(1);
+    cout<<endl;
+    return 0;
+}
+
+
+
+/**
+ *  函数
+ */
+void build(int root, int rootnum, int from, int to) {
+    //cout<<"build "<<from<<to<<endl;
+    //cout<<"root"<<rootnum<<endl;
+    tree[root] = rootnum;
+    int lchild = root * 2;
+    int rchild = root * 2 + 1;
+    //if(rootnum == from + 1 || rootnum == to -1){
+        if(rootnum == from+1) {
+            tree[lchild] = from;
+        }
+        else {
+            int nextrootnum = findRoot(from, rootnum-1);
+            if(nextrootnum!=-1)
+            build(lchild, nextrootnum, from, rootnum-1);
+        }
+        if(rootnum == to-1) {
+            tree[rchild] = to;
+        }
+        else {
+            int nextrootnum = findRoot(rootnum+1, to);
+            if(nextrootnum!=-1)
+            build(rchild, nextrootnum, rootnum+1, to);
+        }
+ //   }
+}
+int findRoot(int l, int r) {
+    int root = -1;
+    int maxa = -10;
+    for(int i=l; i<=r; i++) {
+        if((int)hx.find(zx[i])>maxa) {
+            maxa = (int)hx.find(zx[i]);
+            root = i;
+        }
+    }
+    return root;
+}
+void xxbl(int root) {
+    int lchild = root * 2;
+    int rchild = root * 2 + 1;
+    if(tree[root]!=-1) {
+        cout<<zx[tree[root]];
+    }else
+    {
+        return;
+    }
+    
+    xxbl(lchild);
+    xxbl(rchild);
+}
